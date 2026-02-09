@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: ../8
+      dockerfile: Dockerfile
+      args:
+        NetCoreVersion: "8.0"
+        AspEnvironment: "Development"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Kestrel__Endpoints__Http__Url: "http://0.0.0.0:5000"
+      ConnectionStrings__db: "Host=postgres;Port=5432;Database=creatio_db;Username=creatio;Password=creatio;"
+      ConnectionStrings__redis: "redis:6379"
+    volumes:
+      - ../8:/app
+    ports:
+      - "6001:5000"
+      - "5002:5002"
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: "pgdb"
+      POSTGRES_USER: "creatio"
+      POSTGRES_PASSWORD: "creatio"
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+      - ../8/db:/backup
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+volumes:
+  pg_data:
+  redis_data:
